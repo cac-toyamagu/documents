@@ -50,14 +50,14 @@ K8s用のGitOpsに基づくCDツール。
 
 ## Repository
 
-### 説明
+### Repository説明
 
 - ArgoCDがSigle source of truth (SSoT) として参照するリポジトリの資格情報などを登録するためのリソース.
   - SSoTがパブリックリポジトリなら良いが、プライベートリポジトリの場合資格情報が必要になる。
   - HTTPS・SSH・GitHub Appの手法が利用できる。
 - K8s Secretを作成することで、自動的に作成することが可能[^1]。
 
-### 方針
+### Repository方針
 
 - 宣言的な記述を行うため、ArgoCDのbootstrap時にRepository Secretsを作成し、自動的なRepository登録を行う。
 
@@ -81,12 +81,12 @@ stringData:
   username: my-username
 ```
 
-### Repository Secrets自動作成方法検討
+### Repository Secret自動作成方法検討
 
 - Terraform
   - 悪くない。
 - SecretProviderClass
-  - ArgoCDにはRepository管理用の `repo-server` があるので、そこにマウントする形とすれば特に問題は発生しないと思われる。
+  - ArgoCDにはRepository管理用の `repo-server` があるので、そこにマウントする形とする。
   - <details>
     <summary>SecretProviderClass</summary>
 
@@ -96,35 +96,37 @@ stringData:
     metadata:
       name: argocd-repo-secret
     spec:
-      provider: azure
-      # SecretObject defines the desired state of synced K8s secret objects
-      secretObjects:
-      - secretName: argocd-repo-secret
-        type: Opaque
-        labels:
-          argocd.argoproj.io/secret-type: repository
-        data:
-        - objectName: url  # name of the mounted content to sync. this could be the object name or object alias
-          key: url
-        - objectName: usename
-          key: username
-        - objectName: password
-          key: password
+      provider: aws
       parameters:
         objects: |
-            - objectName: <AWS_SM_SECRET_ARN>
-              jmesPath:
-                  - path: url
-                    objectAlias: url
-                  - path: username
-                    objectAlias: username
-                  - path: password
-                    objectAlias: password
+          - objectName: "argocd"
+            objectType: "secretsmanager"
+            jmesPath:
+                - path: url
+                  objectAlias: url
+                - path: username
+                  objectAlias: username
+                - path: password
+                  objectAlias: password
+      secretObjects:
+      - data:
+        - key: url
+          objectName: url
+        - key: username
+          objectName: username
+        - key: password
+          objectName: password
+        secretName: argocd-repo-secret
+        type: Opaque
+        labels:
+          app.kubernetes.io/part-of: argocd
+          argocd.argoproj.io/secret-type: repository  # Must
     ```
 
     </details>
+    
   - <details>
-    <summary> `values.yaml` </summary>
+    <summary> ArgoCD helm Chartの`values.yaml` </summary>
 
     ```yaml
     repoServer:
@@ -152,8 +154,7 @@ stringData:
 
 ## RBAC
 
-## References
 
-- [^1]: https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/
-- [^2]: https://secrets-store-csi-driver.sigs.k8s.io/introduction.html
-- [^3]: https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml
+[^1]: https://argo-cd.readthedocs.io/en/stable/operator-manual/declarative-setup/
+[^2]: https://secrets-store-csi-driver.sigs.k8s.io/introduction.html
+[^3]: https://github.com/argoproj/argo-helm/blob/main/charts/argo-cd/values.yaml
