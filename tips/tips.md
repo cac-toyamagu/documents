@@ -10,8 +10,9 @@
 
 ## 成功
 
-- TLS証明書のSANを変え、 `~/.kube/config` も変える。
-  - `k3d cluster create --k3s-arg "--tls-san=${IP}@server:0"`
+- 0.0.0.0ではなく、WSLのIPアドレスを指定し、TLS証明書にWSLのIPアドレス用のSAN登録を行う。
+  - `IP=`ifconfig eth0 | grep inet | grep -v inet6 | awk '{print $2}'``
+  - k3d cluster create argocd --k3s-arg "--tls-san=${IP}@server:0" --api-port $IP:6550
 
 ### 失敗
 
