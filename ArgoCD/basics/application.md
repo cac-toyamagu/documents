@@ -11,6 +11,7 @@
     - [概要図](#概要図)
     - [設定例](#設定例)
     - [サンプル](#サンプル)
+    - [注意事項](#注意事項)
   - [TIPS](#tips)
 
 ## 説明
@@ -131,6 +132,12 @@ App of Appsを利用する実際の手順は以下の通りである。
   - App of Appsを用いてinfra appsを作成し、Nginx ingress controllerを自動的にデプロイしている。
   - インターネットからArgoCDへのSSOログインまで自動化されている。
 
+### 注意事項
+
+- v2.4時点で、Appのデプロイ先Projectを制限できない[^8]。
+  - したがって、事実上任意のProjectにAppがデプロイできてしまう。
+  - *v2.5ではこの仕様が解決される予定[^9]*
+
 ## TIPS
 
 - ApplicationのDelete[^5]
@@ -144,3 +151,5 @@ App of Appsを利用する実際の手順は以下の通りである。
 [^5]: https://argo-cd.readthedocs.io/en/stable/user-guide/app_deletion/
 [^6]: https://github.com/toyamagu-2021/terraform-kubernetes-bootstrap-argocd/tree/main/tests/kind
 [^7]: https://github.com/toyamagu-2021/terraform-kubernetes-bootstrap-argocd/tree/main/tests/eks
+[^8]: https://github.com/argoproj/argo-cd/issues/2785
+[^9]: https://github.com/argoproj/argo-cd/pull/9755

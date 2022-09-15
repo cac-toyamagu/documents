@@ -7,6 +7,7 @@
   - [目的](#目的)
   - [Terraform](#terraform)
   - [SecretsProviderClass](#secretsproviderclass)
+  - [External Secrets Operator](#external-secrets-operator)
 
 ## 目的
 
@@ -34,4 +35,10 @@
 - K8s Secretsを作成する機能がある。
   - Podのmount時にSecretが作成されるため、Podが立ち上がっていないとSecretが作成されない。
 
+## External Secrets Operator
+
+- 外部シークレットストアからK8s Secretを作成する[^2]。
+- Podにマウントする必要がないので便利そう。
+
 [^1]: https://github.com/toyamagu-2021/terraform-kubernetes-bootstrap-argocd/tree/main/tests/eks
+[^2]: https://external-secrets.io/v0.6.0-rc1/
