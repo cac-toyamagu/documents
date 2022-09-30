@@ -71,8 +71,17 @@ v3.9.x 時点では alpha 版であるが、Gatekeeperコミュニティによ�
 GatorでもCI中のバリデーションが行えるようになったため、ConftestやKonstraintが不要になるかという議論はあっても良いと考える。
 この点、個人的な意見だが、コーディング・テストのしやすさ、coverageの導出などの手間を考えると、相補的に運用していくのが好ましいと思われる。
 
-本ページでは上記の技術スタックを用いて、K8sマニフェストのバリデーション基盤のCI/CDを行う方法を記述する。
+本解説では上記の技術スタックを用いて、K8sマニフェストのバリデーション基盤のCI/CDを行う方法を記述する。
 全体感を重視し、各々の詳細な解説はスコープ外とする。
+
+全体の流れとしては以下の通り。
+
+1. [Confest](#conftest)を用いて、Rego言語に基づいてK8sマニフェストのバリデーションを行うコードを記述する。  
+   確認として、ユニットテストの記述やopaを用いたカバレッジの測定、実際のK8sマニフェストのバリデーションを行う。  
+1. [Konstraint](#konstraint)を用いてRego言語をGatekeeper形式に変更する。これにより、実際のK8sクラスタでadmissionを行うことができる。  
+1. 生成されたGatekeeperマニフェストのテストとして、[Gator](#gator)を用いたテストを行う。
+1. 上記を自動化するために、GitHub Actionsを用いたCIを構築する。
+1. 最終的な確認として、kindクラスターを用いて生成されたマニフェストの確認を行う。
 
 ### Example
 
@@ -232,10 +241,20 @@ constraint.yaml  src.rego  src_test.rego  suite.yaml  template.yaml  tests
 ## Gator
 
 Gatorを用いて生成された `template.yaml`, `constraint.yaml` のテストを行う。  
-`gator test` と `gator verify` があるが、多くのテストをシステマチックに実行する場合は `verify` のほうが便利だと思うので、こちらを利用する[^gator]。
+`gator test` と `gator verify` があるが、多くのテストをシステマチックに実行する場合は `verify` のほうが便利だと思うので、こちらを利用する[^gator]。  
+v3.9.xの時点ではα版であることを再度注意しておく。
 
 `suite.yaml` を作成し、これを元にテストを行う[^gator-suites]。
-ファイルは以下の通りである。読めば意味はわかると思うので解説は省略する。
+ファイルは以下の通りである。読めばだいたいわかるように、Suite、tests、casesからなる。
+
+- Suite
+  - テスト用のCRD
+- tests
+  - caseのまとまり。test毎にGatekeeper `ConstraintTemplate` リソースと `Constraints` リソースを指定する。
+- case(詳細は公式ドキュメント参照[^gator-case])
+  - テストケース。テストする対象のマニフェストを指定する。
+  - assertionsでviolationの回数を指定できる。yesはat least once。
+  - messageでエラーメッセージの1部を指定できる。
 
 ```yaml:suite.yaml
 kind: Suite
@@ -253,6 +272,8 @@ tests:
     object: "./tests/disallowed/aplication-in-default-prj.yaml"
     assertions:
     - violations: yes
+    - message: "ArgoCD Application is not permitted to use default ArgoCD project."
+      violations: 1
 ```
 
 Gatorの実行は容易。
@@ -315,7 +336,7 @@ ConftestやKonstraintを用いた、優れた解説は以前からあった [^ni
 
 今回用いたのはデプロイできるProjectを制限するという、トリビアルな例だった。  
 他にも、CDツールであるArgoCDにはAutoSync等場合によっては(本番環境など)セキュリティ上disableとしたい機能がある。  
-このように、環境に応じて適切な機能制限を加えることは、Gatekeeperの重要な役割であると考えている。本番運用する際の導入を今後も検討していきたい。
+このように、環境に応じて適切な機能制限を加えることは、Gatekeeperの重要な役割であると考えられる。本番運用する際の導入を今後も検討していきたい。
 
 ## References
 
@@ -338,3 +359,4 @@ ConftestやKonstraintを用いた、優れた解説は以前からあった [^ni
 [^konstraint-github-actions]: <https://github.com/toyamagu-2021/konstraint-examples/blob/main/.github/workflows/konstraint.yaml>
 [^kind-with-argocd-and-gatekeeper]: <https://github.com/toyamagu-2021/konstraint-examples/blob/main/scripts/kind-with-argocd-and-gatekeeper.sh>
 [^conftest-policy-engine]: <https://github.com/open-policy-agent/conftest/blob/108edfe44f247c2048ed7247f6ea28cea72bcb26/policy/engine.go#L401>
+[^gator-case]: <https://open-policy-agent.github.io/gatekeeper/website/docs/gator/#cases>
