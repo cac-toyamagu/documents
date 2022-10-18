@@ -10,7 +10,7 @@
 
 - ArgoCDがSigle source of truth (SSoT) として参照するリポジトリの資格情報などを登録するためのリソース.
   - SSoTがパブリックリポジトリなら良いが、プライベートリポジトリの場合資格情報が必要になる。
-  - HTTPS・SSH・GitHub Appの手法が利用できる。
+  - HTTPS・SSH・GitHub Appsの手法が利用できる。
 - K8s Secretを作成することで、自動的に作成することが可能[^1]。
 
 ## 方針
