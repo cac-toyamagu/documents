@@ -34,5 +34,4 @@ Secretsに `APP_ID` と `PEM_{APP_ID}` を登録しておく。
     private_key: ${{ secrets[format('PEM_{0}', secrets.APP_ID)] }}
 ```
 
-
 [differences-between-github-apps-and-oauth-apps]: https://docs.github.com/en/developers/apps/getting-started-with-apps/differences-between-github-apps-and-oauth-apps
